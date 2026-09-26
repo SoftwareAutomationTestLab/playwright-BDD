@@ -1,4 +1,5 @@
-import { test as base, APIRequestContext } from "@playwright/test";
+import { APIRequestContext, expect } from "@playwright/test";
+import { test as base } from "playwright-bdd";
 import { LoginPage } from "../pages/LoginPage";
 import { ApiClient } from "../api/ApiClient";
 import { DbClient } from "../db/DbClient";
@@ -26,4 +27,4 @@ export const test = base.extend<Fixtures>({
   }
 });
 
-export { expect } from "@playwright/test";
+export { expect };

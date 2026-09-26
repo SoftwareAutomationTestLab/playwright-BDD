@@ -14,7 +14,7 @@ When(
 
 Then(
   "the database should return order {int}",
-  async (_ctx, expectedOrderId: number) => {
+  async ({}, expectedOrderId: number) => {
     expect(dbOrder).toBeDefined();
     expect(dbOrder?.order_id).toBe(expectedOrderId);
   }

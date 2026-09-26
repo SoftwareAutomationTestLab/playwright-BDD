@@ -4,7 +4,7 @@ import { env } from "./config/env";
 
 const testDir = defineBddConfig({
   features: "features/**/*.feature",
-  steps: "steps/**/*.ts",
+  steps: ["steps/**/*.ts", "fixtures/**/*.ts"],
   outputDir: "features-gen"
 });
 
