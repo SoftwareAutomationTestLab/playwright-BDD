@@ -1,0 +1,5 @@
+{
+  "name": "dev",
+  "uiBaseUrl": "https://www.saucedemo.com",
+  "apiBaseUrl": "https://jsonplaceholder.typicode.com"
+}

@@ -1,0 +1,31 @@
+{
+  "name": "playwright-bdd-framework",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "bddgen": "bddgen",
+    "test": "npm run bddgen && playwright test",
+    "test:dev": "cross-env TEST_ENV=dev npm test",
+    "test:staging": "cross-env TEST_ENV=staging npm test",
+    "test:smoke": "npm run bddgen && playwright test --grep @smoke",
+    "test:ui": "npm run bddgen && playwright test --grep @ui",
+    "test:api": "npm run bddgen && playwright test --grep @api",
+    "test:db": "npm run bddgen && playwright test --grep @db",
+    "metrics": "tsx reporting/generate-metrics.ts",
+    "report:email": "tsx reporting/send-email.ts",
+    "report:all": "npm run metrics && npm run report:email",
+    "report:playwright": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "cross-env": "^10.0.0",
+    "playwright-bdd": "^8.4.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ses": "^3.883.0",
+    "better-sqlite3": "^12.4.1",
+    "dotenv": "^17.2.2"
+  }
+}
