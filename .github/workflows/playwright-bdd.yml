@@ -25,6 +25,15 @@ on:
           - ui
           - api
           - db
+      browser:
+        description: "Browser"
+        required: true
+        default: "chromium"
+        type: choice
+        options:
+          - chromium
+          - firefox
+          - webkit
 
 permissions:
   contents: read
@@ -41,6 +50,7 @@ jobs:
 
     env:
       TEST_ENV: ${{ matrix.environment }}
+      BROWSER: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.browser || 'chromium' }}
       AWS_REGION: us-east-1
       SES_FROM_EMAIL: ${{ secrets.SES_FROM_EMAIL }}
       SES_TO_EMAIL: ${{ secrets.SES_TO_EMAIL }}
@@ -59,7 +69,7 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps "$BROWSER"
 
       - name: Generate BDD tests
         run: npm run bddgen

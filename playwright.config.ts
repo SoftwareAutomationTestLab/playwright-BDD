@@ -1,4 +1,4 @@
-import { defineConfig } from "@playwright/test";
+import { defineConfig, type BrowserName } from "@playwright/test";
 import { defineBddConfig } from "playwright-bdd";
 import { env } from "./config/env";
 
@@ -32,7 +32,8 @@ export default defineConfig({
     {
       name: env.name,
       use: {
-        baseURL: env.uiBaseUrl
+        baseURL: env.uiBaseUrl,
+        browserName: (process.env.BROWSER || "chromium") as BrowserName
       }
     }
   ]
