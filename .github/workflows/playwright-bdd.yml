@@ -14,46 +14,30 @@ on:
           - dev
           - staging
           - both
-      suite_all:
-        description: "All suites (uncheck to choose specific suites)"
+      test_suite:
+        description: "TestSuite"
         required: true
-        default: true
-        type: boolean
-      suite_smoke:
-        description: "Smoke suite"
+        default: "smoke"
+        type: choice
+        options:
+          - smoke
+          - FullRegression
+          - ModerateRegression
+      test_app:
+        description: "TestApps"
         required: true
-        default: false
-        type: boolean
-      suite_ui:
-        description: "UI suite"
-        required: true
-        default: false
-        type: boolean
-      suite_api:
-        description: "API suite"
-        required: true
-        default: false
-        type: boolean
-      suite_db:
-        description: "DB suite"
-        required: true
-        default: false
-        type: boolean
-      app1:
-        description: "Include app1 UI/DB tests"
-        required: true
-        default: true
-        type: boolean
-      app2:
-        description: "Include app2 UI/DB tests"
-        required: true
-        default: true
-        type: boolean
-      app3:
-        description: "Include app3 UI/DB tests"
-        required: true
-        default: true
-        type: boolean
+        default: "All"
+        type: choice
+        options:
+          - All
+          - APP1 UI
+          - APP2 UI
+          - APP3 UI
+          - API-Group1
+          - API-Group2
+          - APP1db
+          - App2db
+          - App3db
       browser:
         description: "Browser"
         required: true
@@ -80,14 +64,8 @@ jobs:
     env:
       TEST_ENV: ${{ matrix.environment }}
       BROWSER: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.browser || 'chromium' }}
-      SUITE_ALL: ${{ github.event.inputs.suite_all }}
-      SUITE_SMOKE: ${{ github.event.inputs.suite_smoke }}
-      SUITE_UI: ${{ github.event.inputs.suite_ui }}
-      SUITE_API: ${{ github.event.inputs.suite_api }}
-      SUITE_DB: ${{ github.event.inputs.suite_db }}
-      APP1: ${{ github.event.inputs.app1 }}
-      APP2: ${{ github.event.inputs.app2 }}
-      APP3: ${{ github.event.inputs.app3 }}
+      TEST_SUITE: ${{ github.event.inputs.test_suite }}
+      TEST_APP: ${{ github.event.inputs.test_app }}
       AWS_REGION: us-east-1
       SES_FROM_EMAIL: ${{ secrets.SES_FROM_EMAIL }}
       SES_TO_EMAIL: ${{ secrets.SES_TO_EMAIL }}
@@ -114,52 +92,39 @@ jobs:
       - name: Run tests
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            if [ "$SUITE_ALL" = "true" ]; then
-              suite_smoke=false
-              suite_ui=true
-              suite_api=true
-              suite_db=true
-            else
-              suite_smoke="$SUITE_SMOKE"
-              suite_ui="$SUITE_UI"
-              suite_api="$SUITE_API"
-              suite_db="$SUITE_DB"
-            fi
+            suite="$TEST_SUITE"
+            test_app="$TEST_APP"
+          else
+            suite="scheduled"
+            test_app="All"
+          fi
 
-            app_pattern=""
-            if [ "$APP1" = "true" ]; then app_pattern="app1"; fi
-            if [ "$APP2" = "true" ]; then app_pattern="${app_pattern:+$app_pattern|}app2"; fi
-            if [ "$APP3" = "true" ]; then app_pattern="${app_pattern:+$app_pattern|}app3"; fi
+          case "$suite" in
+            smoke) suite_pattern="(?=.*@smoke)" ;;
+            FullRegression) suite_pattern="" ;;
+            ModerateRegression) suite_pattern="(?=.*@regression)" ;;
+            scheduled) suite_pattern="((?=.*@smoke)|(?=.*@regression))" ;;
+            *) echo "Unsupported test suite: $suite"; exit 1 ;;
+          esac
 
-            if [ -z "$app_pattern" ] && { [ "$suite_smoke" = "true" ] || [ "$suite_ui" = "true" ] || [ "$suite_db" = "true" ]; }; then
-              echo "Select at least one app for the selected UI/DB suites."
-              exit 1
-            fi
+          case "$test_app" in
+            All) app_pattern="" ;;
+            "APP1 UI") app_pattern="(?=.*@ui)(?=.*@app1)" ;;
+            "APP2 UI") app_pattern="(?=.*@ui)(?=.*@app2)" ;;
+            "APP3 UI") app_pattern="(?=.*@ui)(?=.*@app3)" ;;
+            API-Group1) app_pattern="(?=.*@api)(?=.*@API-Group1)" ;;
+            API-Group2) app_pattern="(?=.*@api)(?=.*@API-Group2)" ;;
+            APP1db) app_pattern="(?=.*@db)(?=.*@app1)" ;;
+            App2db) app_pattern="(?=.*@db)(?=.*@app2)" ;;
+            App3db) app_pattern="(?=.*@db)(?=.*@app3)" ;;
+            *) echo "Unsupported test app: $test_app"; exit 1 ;;
+          esac
 
-            grep_patterns=()
-            if [ "$suite_smoke" = "true" ]; then
-              grep_patterns+=("(?=.*@api)(?=.*@smoke)")
-              if [ -n "$app_pattern" ]; then
-                grep_patterns+=("(?=.*@(ui|db))(?=.*@smoke)(?=.*@($app_pattern))")
-              fi
-            fi
-            if [ "$suite_api" = "true" ]; then grep_patterns+=("(?=.*@api)"); fi
-            if [ "$suite_ui" = "true" ] && [ -n "$app_pattern" ]; then
-              grep_patterns+=("(?=.*@ui)(?=.*@($app_pattern))")
-            fi
-            if [ "$suite_db" = "true" ] && [ -n "$app_pattern" ]; then
-              grep_patterns+=("(?=.*@db)(?=.*@($app_pattern))")
-            fi
-
-            if [ "${#grep_patterns[@]}" -eq 0 ]; then
-              echo "Select at least one suite."
-              exit 1
-            fi
-
-            grep_pattern="$(IFS='|'; printf '%s' "${grep_patterns[*]}")"
+          grep_pattern="${suite_pattern}${app_pattern}"
+          if [ -n "$grep_pattern" ]; then
             npx playwright test --grep "$grep_pattern"
           else
-            npm test
+            npx playwright test
           fi
 
       - name: Generate metrics

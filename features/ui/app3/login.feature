@@ -1,6 +1,7 @@
-@ui @smoke @app3
+@ui @app3
 Feature: App 3 login
 
+  @smoke
   Scenario: Valid user can login to app 3
     Given I open the app3 login page
     When I login to app3 with username "standard_user" and password "secret_sauce"

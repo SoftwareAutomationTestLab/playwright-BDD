@@ -115,7 +115,7 @@ Tests are organized by app group:
 - UI and DB: `app1`, `app2`, and `app3`
 - API: `API-Group1` and `API-Group2`
 
-For manual runs, workflow-dispatch checkboxes allow multiple suites and apps. `All suites` is checked by default; uncheck it to choose any combination of Smoke, UI, API, and DB. All app checkboxes are selected by default; app selections filter UI and DB tests, while API always includes both API groups. Scheduled runs execute all UI, API, and DB tests on Dev. The app-specific starter tests currently use the shared demo endpoints and database client configured by this project.
+For manual runs, select a `TestSuite` (`smoke`, `FullRegression`, or `ModerateRegression`) and a `TestApps` target. The `All` app target includes all configured groups. `ModerateRegression` selects scenarios tagged `@regression`; scheduled runs execute `@smoke` and `@regression` tests on Dev only. The app-specific starter tests currently use the shared demo endpoints and database client configured by this project.
 
 ## Replacing the demo systems
 
