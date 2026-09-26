@@ -1,0 +1,97 @@
+name: Playwright BDD Tests
+
+on:
+  schedule:
+    - cron: "0 5 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment"
+        required: true
+        default: "both"
+        type: choice
+        options:
+          - dev
+          - staging
+          - both
+      suite:
+        description: "Suite"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - smoke
+          - ui
+          - api
+          - db
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test:
+    name: Test ${{ matrix.environment }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ${{ github.event_name == 'schedule' && fromJSON('["dev","staging"]') || (github.event.inputs.environment == 'both' && fromJSON('["dev","staging"]') || fromJSON(format('["{0}"]', github.event.inputs.environment))) }}
+
+    env:
+      TEST_ENV: ${{ matrix.environment }}
+      AWS_REGION: us-east-1
+      SES_FROM_EMAIL: ${{ secrets.SES_FROM_EMAIL }}
+      SES_TO_EMAIL: ${{ secrets.SES_TO_EMAIL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Generate BDD tests
+        run: npm run bddgen
+
+      - name: Run tests
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            case "${{ github.event.inputs.suite }}" in
+              smoke) npm run test:smoke ;;
+              ui) npm run test:ui ;;
+              api) npm run test:api ;;
+              db) npm run test:db ;;
+              *) npm test ;;
+            esac
+          else
+            npm test
+          fi
+
+      - name: Generate metrics
+        if: always()
+        run: npm run metrics
+
+      - name: Send SES report
+        if: always()
+        run: npm run report:email
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-${{ matrix.environment }}
+          path: |
+            playwright-report/
+            test-results/
+            features-gen/
