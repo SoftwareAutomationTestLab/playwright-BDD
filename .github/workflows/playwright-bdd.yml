@@ -25,6 +25,16 @@ on:
           - ui
           - api
           - db
+      app:
+        description: "App (used for UI and DB suites)"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - app1
+          - app2
+          - app3
       browser:
         description: "Browser"
         required: true
@@ -77,11 +87,25 @@ jobs:
       - name: Run tests
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            case "${{ github.event.inputs.suite }}" in
+            suite="${{ github.event.inputs.suite }}"
+            app="${{ github.event.inputs.app }}"
+            case "$suite" in
               smoke) npm run test:smoke ;;
-              ui) npm run test:ui ;;
               api) npm run test:api ;;
-              db) npm run test:db ;;
+              ui)
+                if [ "$app" = "all" ]; then
+                  npm run test:ui
+                else
+                  npx playwright test --grep "@ui.*@$app"
+                fi
+                ;;
+              db)
+                if [ "$app" = "all" ]; then
+                  npm run test:db
+                else
+                  npx playwright test --grep "@db.*@$app"
+                fi
+                ;;
               *) npm test ;;
             esac
           else

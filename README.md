@@ -115,7 +115,7 @@ Tests are organized by app group:
 - UI and DB: `app1`, `app2`, and `app3`
 - API: `API-Group1` and `API-Group2`
 
-The workflow's UI, API, and DB suite choices select their matching feature tags. The app-specific starter tests currently use the shared demo endpoints and database client configured by this project.
+For manual runs, UI and DB suites can run all apps or one selected app (`app1`, `app2`, or `app3`). Selecting API runs both API groups; the app choice does not filter API tests. Scheduled runs execute all UI, API, and DB tests on Dev. The app-specific starter tests currently use the shared demo endpoints and database client configured by this project.
 
 ## Replacing the demo systems
 
