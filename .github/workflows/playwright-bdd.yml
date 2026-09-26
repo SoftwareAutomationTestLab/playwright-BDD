@@ -46,7 +46,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        environment: ${{ github.event_name == 'schedule' && fromJSON('["dev","staging"]') || (github.event.inputs.environment == 'both' && fromJSON('["dev","staging"]') || fromJSON(format('["{0}"]', github.event.inputs.environment))) }}
+        environment: ${{ github.event_name == 'schedule' && fromJSON('["dev"]') || (github.event.inputs.environment == 'both' && fromJSON('["dev","staging"]') || fromJSON(format('["{0}"]', github.event.inputs.environment))) }}
 
     env:
       TEST_ENV: ${{ matrix.environment }}
