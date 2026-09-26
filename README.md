@@ -108,7 +108,14 @@ The workflow supports:
 - API
 - DB
 
-Scheduled execution runs both Dev and Staging with `fail-fast: false`.
+Scheduled execution runs Dev only.
+
+Tests are organized by app group:
+
+- UI and DB: `app1`, `app2`, and `app3`
+- API: `API-Group1` and `API-Group2`
+
+The workflow's UI, API, and DB suite choices select their matching feature tags. The app-specific starter tests currently use the shared demo endpoints and database client configured by this project.
 
 ## Replacing the demo systems
 
